@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace EmergencyResponseSimulation
@@ -130,6 +130,7 @@ namespace EmergencyResponseSimulation
         private List<EmergencyUnit> units;
         private int score;
         private const int TotalRounds = 5;
+        private Random random = new Random();
 
         public EmergencySimulation()
         {
@@ -158,49 +159,105 @@ namespace EmergencyResponseSimulation
 
         public void RunSimulation()
         {
-            Console.WriteLine("=== EMERGENCY RESPONSE SIMULATION ===");
-            Console.WriteLine("Menu name: firezer settual");
-            Console.WriteLine("ID: DBU1501744");
-            Console.WriteLine($"Running for {TotalRounds} rounds...\n");
+            while (true)
+            {
+                Console.Clear();
+                score = 0;
+
+                Console.WriteLine("=== EMERGENCY RESPONSE SIMULATION ===");
+                Console.WriteLine("Menu name: firezer settual");
+                Console.WriteLine("ID: DBU1501744");
+
+                Console.WriteLine("\nSelect simulation mode:");
+                Console.WriteLine("1. Automated (5 random incidents)");
+                Console.WriteLine("2. Manual (enter incidents manually)");
+                Console.WriteLine("3. Exit");
+                Console.Write("Enter choice (1-3): ");
+
+                string choice = Console.ReadLine();
+
+                switch (choice)
+                {
+                    case "1":
+                        RunAutomatedSimulation();
+                        break;
+                    case "2":
+                        RunManualSimulation();
+                        break;
+                    case "3":
+                        Console.WriteLine("\nExiting program...");
+                        return;
+                    default:
+                        Console.WriteLine("Invalid choice! Please try again.");
+                        Console.ReadKey();
+                        continue;
+                }
+
+                Console.WriteLine($"\nSimulation ended. Final Score: {score}");
+                Console.WriteLine("\nPress any key to return to main menu...");
+                Console.ReadKey();
+            }
+        }
+
+        private void RunAutomatedSimulation()
+        {
+            Console.WriteLine($"\nRunning automated simulation for {TotalRounds} rounds...");
+
+            string[] incidentTypes = { "Crime", "Medical", "Fire", "Hazardous Material", "Traffic Accident", "Public Disturbance" };
+            string[] incidentLevels = { "Low", "Medium", "High" };
+            string[] locations = { "Downtown", "Suburbs", "Industrial Zone", "Residential Area", "Highway", "City Center" };
 
             for (int round = 1; round <= TotalRounds; round++)
             {
-                Console.WriteLine($"--- Turn {round} ---");
+                Console.WriteLine($"\n--- Turn {round} ---");
 
-                string incidentType = GetIncidentType();
-                string incidentLevel = GetIncidentLevel();
-                string location = GetLocation();
+                string incidentType = incidentTypes[random.Next(incidentTypes.Length)];
+                string incidentLevel = incidentLevels[random.Next(incidentLevels.Length)];
+                string location = locations[random.Next(locations.Length)];
 
-                Incident incident = new Incident(incidentType, location, incidentLevel);
-                Console.WriteLine($"\nProcessing {incident.Level} priority {incident.Type} incident at {incident.Location}...");
+                ProcessIncident(new Incident(incidentType, location, incidentLevel));
+            }
+        }
 
-                EmergencyUnit unit = units.Find(u => u.CanHandle(incident.Type));
+        private void RunManualSimulation()
+        {
+            Console.WriteLine($"\nRunning manual simulation for {TotalRounds} rounds...");
 
-                if (unit != null)
-                {
-                    unit.RespondToIncident(incident);
-                    int points = CalculatePoints(incident.Level);
-                    score += points;
-                    Console.WriteLine($"+{points} points");
-                }
-                else
-                {
-                    Console.WriteLine($"No available unit to handle {incident.Type} incident!");
-                    score -= 5;
-                    Console.WriteLine("-5 points");
-                }
+            for (int round = 1; round <= TotalRounds; round++)
+            {
+                Console.WriteLine($"\n--- Turn {round} ---");
+                ProcessIncident(new Incident(GetIncidentType(), GetIncidentLevel(), GetLocation()));
+            }
+        }
 
-                Console.WriteLine($"Current Score: {score}\n");
+        private void ProcessIncident(Incident incident)
+        {
+            Console.WriteLine($"\nProcessing {incident.Level} priority {incident.Type} incident at {incident.Location}...");
+
+            EmergencyUnit unit = units.Find(u => u.CanHandle(incident.Type));
+
+            if (unit != null)
+            {
+                unit.RespondToIncident(incident);
+                int points = CalculatePoints(incident.Level);
+                score += points;
+                Console.WriteLine($"+{points} points");
+            }
+            else
+            {
+                Console.WriteLine($"No available unit to handle {incident.Type} incident!");
+                score -= 5;
+                Console.WriteLine("-5 points");
             }
 
-            Console.WriteLine($"\nSimulation ended. Final Score: {score}");
+            Console.WriteLine($"Current Score: {score}");
         }
 
         private string GetIncidentType()
         {
             while (true)
             {
-                Console.WriteLine("Select incident type:");
+                Console.WriteLine("\nSelect incident type:");
                 Console.WriteLine("1. Crime");
                 Console.WriteLine("2. Medical");
                 Console.WriteLine("3. Fire");
@@ -226,7 +283,7 @@ namespace EmergencyResponseSimulation
         {
             while (true)
             {
-                Console.WriteLine("Select incident level:");
+                Console.WriteLine("\nSelect incident level:");
                 Console.WriteLine("1. Low");
                 Console.WriteLine("2. Medium");
                 Console.WriteLine("3. High");
@@ -246,7 +303,7 @@ namespace EmergencyResponseSimulation
         {
             while (true)
             {
-                Console.Write("Enter incident location: ");
+                Console.Write("\nEnter incident location: ");
                 string location = Console.ReadLine();
                 if (!string.IsNullOrWhiteSpace(location)) return location;
                 Console.WriteLine("Location cannot be empty!");
